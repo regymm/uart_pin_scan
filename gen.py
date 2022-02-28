@@ -8,11 +8,16 @@
 import sys
 import os
 
-if len(sys.argv) != 7:
-    print("Usage: ./gen.py pins.txt pins.lpf top.v output.lpf output.v CLK_PIN")
+if len(sys.argv) < 7:
+    print("Usage: ./gen.py pins.txt pins.lpf|xdc top.v output.lpf|xdc output.v CLK_PIN")
     sys.exit(1)
 
-lpf_entry = "LOCATE COMP \"%s\" SITE \"%s\";\n" 
+lpf_entry = "LOCATE COMP \"%s\" SITE \"%s\";\n"
+
+xdc_33 = "LVCMOS33"
+xdc_hs_18 = "HSTL_II_18"
+xdc_entry = "set_property -dict {PACKAGE_PIN %s IOSTANDARD %s} [get_ports {%s}]\n"
+
 v_count_entry = "\tparameter COUNT = %d,\n"
 v_def_entry = "\toutput %s,\n" 
 v_assign_entry = "assign %s = pincnt == %d ? tx : 1\'b1;\n" 
@@ -30,18 +35,38 @@ with open(f_mem_out, "w") as f:
         f.write("%02x%02x%02x%02x\n" % (ord(s[0]), ord(s[1]), ord(s[2]), ord(s[3])))
     print("Memory file %s writen" % f_mem_out)
 
-with open(f_lpf, "r") as f2:
-    lpf_lines = f2.readlines()
-    with open(f_lpf_out, "w") as f3:
-        for i in lpf_lines:
-            if "PIN_SCAN LPF_CLK" in i:
-                f3.write(lpf_entry % ("clk", clk_pin))
-            elif "PIN_SCAN LPF_PINS" in i:
-                for j in pins:
-                    f3.write(lpf_entry % (j, j))
-            else:
-                f3.write(i)
-        print("Constrain file %s writen" % f_lpf_out)
+if '.lpf' in f_lpf: 
+    print("Constrain file type is lpf")
+    with open(f_lpf, "r") as f2:
+        lpf_lines = f2.readlines()
+        with open(f_lpf_out, "w") as f3:
+            for i in lpf_lines:
+                if "PIN_SCAN LPF_CLK" in i:
+                    f3.write(lpf_entry % ("clk", clk_pin))
+                elif "PIN_SCAN LPF_PINS" in i:
+                    for j in pins:
+                        f3.write(lpf_entry % (j, j))
+                else:
+                    f3.write(i)
+            print("Constrain file %s writen" % f_lpf_out)
+elif '.xdc' in f_lpf: 
+    print("Constrain file type is xdc")
+    with open(f_lpf, "r") as f2:
+        lpf_lines = f2.readlines()
+        with open(f_lpf_out, "w") as f3:
+            for i in lpf_lines:
+                if "PIN_SCAN XDC_CLK" in i:
+                    f3.write(xdc_entry % (clk_pin, xdc_hs_18, "clk"))
+                elif "PIN_SCAN XDC_PINS" in i:
+                    for j in pins:
+                        f3.write(xdc_entry % (j, xdc_33, j))
+                else:
+                    f3.write(i)
+            print("Constrain file %s writen" % f_lpf_out)
+else:
+    print("Unsupported constraint file type!")
+    exit(-2)
+
 
 with open(f_v, "r") as f2:
     v_lines = f2.readlines()

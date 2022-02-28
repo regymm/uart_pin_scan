@@ -10,6 +10,12 @@ The bitstream literally drives every pin high on the chip, so some delicate peri
 
 #### Example
 
+xc7k325t on mysterious board with HSTL_II_18 constraint. 
+
+```
+./gen.py pins_k7.txt pins.xdc top.v output.xdc output.v D27
+```
+
 lfe5u-12f 6bg256c on mysterious board with 50 MHz clock on pin K1. Pin list(pins.txt) derived from https://www.latticesemi.com/-/media/LatticeSemi/Documents/PinPackage/ECP5/FPGA-SC-02032-2-0-ECP5U-12-Pinout.ashx?document_id=51576
 
 ```
